@@ -41,11 +41,6 @@ pub trait VarIntReader {
     fn read_varint_full(&mut self) -> io::Result<(i32, Vec<u8>)>;
 }
 
-pub trait AsyncVarIntReader {
-    async fn read_varint(&mut self) -> io::Result<i32>;
-    async fn read_varint_full(&mut self) -> io::Result<(i32, Vec<u8>)>;
-}
-
 impl<R: std::io::Read> VarIntReader for R {
     fn read_varint(&mut self) -> io::Result<i32> {
         let mut value: i32 = 0;
