@@ -131,7 +131,7 @@ fn generate_packet_enum(packets: &[PacketInfo]) -> anyhow::Result<()> {
 
     let impl_decl = quote! {
         impl Packets {
-            pub fn deserialize(id: i32, state: States, origin: Origins, bytes: &[u8]) -> Result<Packets> {
+            pub fn deserialize(id: i32, state: &States, origin: &Origins, bytes: &[u8]) -> Result<Packets> {
                 match (state, origin, id) {
                     #(#match_arms)*
                     _ => Err(Error::new(ErrorKind::InvalidData, "Unknown packet")),

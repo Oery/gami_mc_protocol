@@ -64,7 +64,7 @@ pub enum Packets {
 }
 
 impl Packets {
-    pub fn deserialize(id: i32, state: States, origin: Origins, bytes: &[u8]) -> Result<Packets> {
+    pub fn deserialize(id: i32, state: &States, origin: &Origins, bytes: &[u8]) -> Result<Packets> {
         match (state, origin, id) {
             (Handshake, Client, 0i32) => Ok(Packets::SetProtocol(Packet::deserialize(bytes)?)),
             (Handshake, Client, 254i32) => {
