@@ -1,9 +1,26 @@
 [package]
 name = "gami_mc_protocol"
 version = "0.1.0"
+authors = ["Oery"]
+description = "An implementation of the Minecraft protocol powering Origami/Kagami"
+repository = "https://github.com/Oery/gami_mc_protocol"
+license = "MIT"
+keywords = ["minecraft", "protocol", "networking", "serialization", "packets"]
+categories = ["network-programming", "encoding"]
 edition = "2021"
 
 [dependencies]
+macros = { path = "./macros" }
 byteorder = "1.5.0"
 num_enum = "0.7.3"
 uuid = { version = "1.12.1", features = ["v4"] }
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
+
+[build-dependencies]
+quote = "1.0.38"
+syn = { version = "2.0.98", features = ["full"] }
+proc-macro2 = "1.0.93"
+walkdir = "2.5.0"
+convert_case = "0.7.1"
+anyhow = "1.0.95"

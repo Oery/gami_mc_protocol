@@ -2,6 +2,8 @@ use std::io::{self, Write};
 
 use byteorder::{ReadBytesExt, WriteBytesExt};
 
+use super::{Deserialize, Serialize};
+
 const SEGMENT_BITS: u8 = 0x7F;
 const CONTINUE_BIT: u8 = 0x80;
 
@@ -150,4 +152,18 @@ pub fn serialize_varint_option(option: &Option<i32>, writer: &mut dyn io::Write)
         serialize_varint(value, writer)?;
     }
     Ok(())
+}
+
+pub struct VarInt<T>(T);
+
+impl Serialize for VarInt<i32> {
+    fn serialize(&self, buf: &mut dyn io::Write) -> io::Result<()> {
+        serialize_varint(&self.0, buf)
+    }
+}
+
+impl Deserialize for VarInt<i32> {
+    fn deserialize<R: io::Read>(reader: &mut R) -> io::Result<Self> {
+        Ok(VarInt(deserialize_varint(reader)?))
+    }
 }
