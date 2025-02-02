@@ -1,6 +1,6 @@
 [package]
 name = "gami_mc_protocol"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Oery"]
 description = "An implementation of the Minecraft protocol powering Origami/Kagami"
 repository = "https://github.com/Oery/gami_mc_protocol"
