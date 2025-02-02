@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Oery"]
 description = "An implementation of the Minecraft protocol powering Origami/Kagami"
 repository = "https://github.com/Oery/gami_mc_protocol"
+readme = "README.md"
 license = "MIT"
 keywords = ["minecraft", "protocol", "networking", "serialization", "packets"]
 categories = ["network-programming", "encoding"]
