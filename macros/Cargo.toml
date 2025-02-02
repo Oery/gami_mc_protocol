@@ -1,6 +1,10 @@
 [package]
-name = "macros"
+name = "gami_macros"
 version = "0.1.0"
+authors = ["Oery"]
+description = "Macros for the gami_mc_protocol crate"
+repository = "https://github.com/Oery/gami_mc_protocol"
+license = "MIT"
 edition = "2021"
 
 [lib]

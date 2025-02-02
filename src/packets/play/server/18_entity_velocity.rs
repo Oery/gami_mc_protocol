@@ -1,6 +1,6 @@
 use crate::packets::Packet;
 use crate::serialization::{deserialize_varint, serialize_varint};
-use macros::{packet, Deserialize, Serialize};
+use gami_macros::{packet, Deserialize, Serialize};
 
 #[packet(0x12, server)]
 pub struct EntityVelocity {

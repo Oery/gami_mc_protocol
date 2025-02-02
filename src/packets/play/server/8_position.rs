@@ -1,5 +1,5 @@
 use crate::packets::Packet;
-use macros::{packet, Deserialize, Serialize};
+use gami_macros::{packet, Deserialize, Serialize};
 
 #[packet(0x08, server)]
 pub struct Position {

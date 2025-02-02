@@ -1,5 +1,5 @@
 // use crate::packets::{Packet};
-// use macros::{packet, Deserialize, Serialize};
+// use gami_macros::{packet, Deserialize, Serialize};
 
 // use pkcs8::{DecodePublicKey, EncodePublicKey};
 // use rsa::RsaPublicKey;

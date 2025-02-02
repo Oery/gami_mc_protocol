@@ -1,5 +1,5 @@
 use crate::serialization::{Deserialize, Serialize};
-use macros::{Deserialize, Serialize};
+use gami_macros::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
 #[encoding("u8")]

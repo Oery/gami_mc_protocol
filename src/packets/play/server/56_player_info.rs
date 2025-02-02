@@ -4,7 +4,7 @@ use crate::packets::{Packet, ServerPacket};
 use crate::registry::tcp::{Origins, States};
 use crate::serialization::{deserialize_varint, serialize_varint};
 use crate::serialization::{Deserialize, Serialize};
-use macros::{Deserialize, Serialize};
+use gami_macros::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct PlayerInfo {
