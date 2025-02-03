@@ -16,7 +16,7 @@ pub trait Packet: Serialize + Deserialize + Debug + Send + Sync {
     fn serialize(&self, compression: i32) -> Result<Vec<u8>> {
         let mut data = Vec::new();
 
-        if compression > 0 {
+        if compression != -1 {
             data.push(0x00); // TODO: Implement compression
         }
 
