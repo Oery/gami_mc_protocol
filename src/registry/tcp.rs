@@ -1,6 +1,8 @@
 use std::fmt::{Debug, Display};
 use std::io::{Error, ErrorKind, Read, Result, Write};
 
+use atomic_enum::atomic_enum;
+
 use crate::serialization::{deserialize_varint, serialize_varint, Deserialize, Serialize};
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy)]
@@ -18,6 +20,7 @@ impl Display for Origins {
         }
     }
 }
+#[atomic_enum]
 #[derive(Eq, PartialEq)]
 pub enum States {
     Handshake,
