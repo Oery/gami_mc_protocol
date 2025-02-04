@@ -1,14 +1,24 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::io::{Error, ErrorKind, Read, Result, Write};
 
 use crate::serialization::{deserialize_varint, serialize_varint, Deserialize, Serialize};
+
+#[derive(Eq, PartialEq, Debug, Clone, Copy)]
 
 pub enum Origins {
     Client,
     Server,
 }
 
-#[derive(Eq, PartialEq, Debug)]
+impl Display for Origins {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Origins::Client => write!(f, "Client"),
+            Origins::Server => write!(f, "Server"),
+        }
+    }
+}
+#[derive(Eq, PartialEq)]
 pub enum States {
     Handshake,
     Status,
@@ -24,6 +34,18 @@ impl States {
             _ if module.contains("login") => States::Login,
             _ if module.contains("play") => States::Play,
             _ => panic!("A Packet must be defined in either a state module"),
+        }
+    }
+}
+
+// TODO: Check if there is an easier way to do this
+impl Display for States {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            States::Handshake => write!(f, "Handshake"),
+            States::Status => write!(f, "Status"),
+            States::Login => write!(f, "Login"),
+            States::Play => write!(f, "Play"),
         }
     }
 }
