@@ -11,7 +11,13 @@ use walkdir::WalkDir;
 
 fn main() -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=src/packets");
+    println!("cargo:rerun-if-changed=src/packets/handshake/client");
+    println!("cargo:rerun-if-changed=src/packets/login/client");
+    println!("cargo:rerun-if-changed=src/packets/login/server");
+    println!("cargo:rerun-if-changed=src/packets/play/client");
+    println!("cargo:rerun-if-changed=src/packets/play/server");
+    println!("cargo:rerun-if-changed=src/packets/status/client");
+    println!("cargo:rerun-if-changed=src/packets/status/server");
 
     let mut packets: Vec<PacketInfo> = list_packets()?;
 
