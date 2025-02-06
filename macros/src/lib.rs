@@ -5,7 +5,7 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{
     braced, parse_macro_input, Attribute, Data, DeriveInput, Expr, ExprLit, Fields, Ident, Lit,
-    LitInt, LitStr, Path, Token,
+    LitInt, LitStr, Path, Token, UnOp,
 };
 
 #[proc_macro]
@@ -138,6 +138,22 @@ fn parse_discriminant_as_typed_value(expr: &Expr, ty: &str) -> proc_macro2::Toke
         }) => lit_int
             .base10_parse::<i64>()
             .expect("Failed to parse integer literal"),
+        Expr::Unary(unary_expr) => {
+            if let UnOp::Neg(_) = unary_expr.op {
+                if let Expr::Lit(ExprLit {
+                    lit: Lit::Int(lit_int),
+                    ..
+                }) = &*unary_expr.expr
+                {
+                    let value_str = lit_int.base10_digits().replace('_', "");
+                    value_str.parse::<i64>().expect("Failed to parse integer literal in negation") * -1
+                } else {
+                    panic!("Unsupported expression in negation");
+                }
+            } else {
+                panic!("Unsupported unary operation");
+            }
+        }
         Expr::Cast(cast_expr) => match &*cast_expr.expr {
             Expr::Lit(ExprLit {
                 lit: Lit::Int(lit_int),
