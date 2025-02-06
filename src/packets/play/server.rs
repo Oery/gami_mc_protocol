@@ -118,3 +118,7 @@ pub use block_change::*;
 #[path = "./server/64_kick_disconnect.rs"]
 mod kick_disconnect;
 pub use kick_disconnect::*;
+
+#[path = "./server/65_server_difficulty.rs"]
+mod server_difficulty;
+pub use server_difficulty::*;
