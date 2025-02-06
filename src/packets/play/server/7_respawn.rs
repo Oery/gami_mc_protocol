@@ -1,10 +1,12 @@
-use crate::{packets::Packet, registry::Dimension};
 use gami_macros::{packet, Deserialize, Serialize};
+
+use crate::packets::Packet;
+use crate::registry::{Difficulty, Dimension};
 
 #[packet(0x07, server)]
 pub struct Respawn {
     pub dimension: Dimension,
-    pub difficulty: u8,
+    pub difficulty: Difficulty,
     pub gamemode: u8,
     pub level_type: String,
 }
