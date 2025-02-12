@@ -4,7 +4,7 @@ use crate::packets::Packet;
 use crate::registry::{Difficulty, Dimension};
 
 #[packet(0x01, server)]
-pub struct Login {
+pub struct JoinGame {
     pub entity_id: i32,
     pub game_mode: u8,
     pub dimension: Dimension,

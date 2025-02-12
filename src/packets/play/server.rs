@@ -7,9 +7,9 @@
 mod keep_alive;
 pub use keep_alive::*;
 
-#[path = "./server/1_login.rs"]
-mod login;
-pub use login::*;
+#[path = "./server/1_join_game.rs"]
+mod join_game;
+pub use join_game::*;
 
 #[path = "./server/2_chat.rs"]
 mod chat;
