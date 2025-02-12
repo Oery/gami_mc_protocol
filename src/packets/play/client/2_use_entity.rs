@@ -16,6 +16,15 @@ pub enum InteractionType {
     InteractAt { x: f32, y: f32, z: f32 },
 }
 
+impl UseEntity {
+    pub fn attack(entity_id: i32) -> Self {
+        Self {
+            target: entity_id,
+            interaction_type: InteractionType::Attack,
+        }
+    }
+}
+
 impl Deserialize for InteractionType {
     fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
         use InteractionType::*;
