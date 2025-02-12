@@ -57,6 +57,7 @@ pub enum Packets {
     RemoveEntityEffect(play::server::RemoveEntityEffect),
     BlockChange(play::server::BlockChange),
     KickDisconnect(play::server::KickDisconnect),
+    ServerDifficulty(play::server::ServerDifficulty),
     PingStart(status::client::PingStart),
     ClientPing(status::client::Ping),
     ServerInfo(status::server::ServerInfo),
