@@ -6,19 +6,19 @@ use gami_macros::{packet, Deserialize, Serialize};
 pub struct UseEntity {
     #[encoding("varint")]
     pub target: i32,
-    pub interaction_type: UseEntityType,
+    pub interaction_type: InteractionType,
 }
 
 #[derive(Debug, PartialEq)]
-pub enum UseEntityType {
+pub enum InteractionType {
     Interact,
     Attack,
     InteractAt { x: f32, y: f32, z: f32 },
 }
 
-impl Deserialize for UseEntityType {
+impl Deserialize for InteractionType {
     fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
-        use UseEntityType::*;
+        use InteractionType::*;
 
         let action = deserialize_varint(reader)?;
         match action {
@@ -37,9 +37,9 @@ impl Deserialize for UseEntityType {
     }
 }
 
-impl Serialize for UseEntityType {
+impl Serialize for InteractionType {
     fn serialize(&self, buf: &mut dyn std::io::Write) -> std::io::Result<()> {
-        use UseEntityType::*;
+        use InteractionType::*;
 
         match self {
             Interact => serialize_varint(&0, buf),
