@@ -1,35 +1,14 @@
 use uuid::Uuid;
 
-use crate::packets::{Packet, ServerPacket};
-use crate::registry::tcp::{Origins, States};
+use crate::packets::Packet;
 use crate::serialization::{deserialize_varint, serialize_varint};
-use crate::serialization::{Deserialize, Serialize};
+use gami_macros::packet;
 use gami_macros::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[packet(0x38, server)]
 pub struct PlayerInfo {
     pub action: PlayerInfoAction,
 }
-
-impl Packet for PlayerInfo {
-    fn get_id(&self) -> u8 {
-        0x38
-    }
-
-    fn get_name(&self) -> &'static str {
-        "PlayerInfo"
-    }
-
-    fn get_origin(&self) -> Origins {
-        Origins::Client
-    }
-
-    fn get_state(&self) -> States {
-        States::Play
-    }
-}
-
-impl ServerPacket for PlayerInfo {}
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Property {
