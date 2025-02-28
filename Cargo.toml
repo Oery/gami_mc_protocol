@@ -17,6 +17,7 @@ uuid = { version = "1.12.1", features = ["v4"] }
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.138"
 atomic_enum = "0.3.0"
+enum_dispatch = "0.3.13"
 
 [build-dependencies]
 quote = "1.0.38"
