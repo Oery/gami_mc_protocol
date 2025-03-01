@@ -3,7 +3,7 @@ use gami_macros::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone)]
 #[encoding("u8")]
-pub enum PotionEffects {
+pub enum PotionEffect {
     Speed = 1,
     Slowness = 2,
     Haste = 3,

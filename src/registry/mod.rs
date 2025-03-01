@@ -12,5 +12,5 @@ pub use client_settings_chat_modes::ChatModes;
 pub use difficulty::Difficulty;
 pub use dimension::Dimension;
 pub use entities::{mobs::SheepColor, EntityKind};
-pub use potion_effects::PotionEffects;
+pub use potion_effects::PotionEffect;
 pub use vec_3::Vec3;
