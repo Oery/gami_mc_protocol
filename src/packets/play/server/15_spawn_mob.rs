@@ -1,11 +1,6 @@
-use crate::packets::Packet;
+use gami_macros::packet;
+
 use crate::registry::entities::mobs::Mob;
-use crate::serialization::{
-    deserialize_fixed_point_i16, deserialize_fixed_point_i32, deserialize_metadatas_vec,
-    deserialize_varint, serialize_fixed_point_i16, serialize_fixed_point_i32,
-    serialize_metadatas_vec, serialize_varint, Metadata,
-};
-use gami_macros::{packet, Deserialize, Serialize};
 
 #[packet(0x0F, server)]
 pub struct SpawnMob {

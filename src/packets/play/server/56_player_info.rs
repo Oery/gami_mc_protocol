@@ -1,9 +1,5 @@
-use uuid::Uuid;
-
-use crate::packets::Packet;
-use crate::serialization::{deserialize_varint, serialize_varint};
 use gami_macros::packet;
-use gami_macros::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[packet(0x38, server)]
 pub struct PlayerInfo {

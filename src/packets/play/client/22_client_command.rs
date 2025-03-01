@@ -1,6 +1,6 @@
-use crate::packets::Packet;
+use gami_macros::packet;
+
 use crate::registry::ClientCommandActions;
-use gami_macros::{packet, Deserialize, Serialize};
 
 #[packet(0x16, client)]
 pub struct ClientCommand {

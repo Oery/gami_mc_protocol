@@ -1,3 +1,5 @@
+use gami_macros::packet;
+
 use crate::registry::PotionEffect;
 
 #[packet(0x1E, server)]

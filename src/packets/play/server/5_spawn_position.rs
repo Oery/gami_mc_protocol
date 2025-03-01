@@ -1,6 +1,6 @@
-use crate::packets::Packet;
+use gami_macros::packet;
+
 use crate::registry::Vec3;
-use gami_macros::{packet, Deserialize, Serialize};
 
 #[packet(0x05, server)]
 pub struct SpawnPosition {

@@ -1,10 +1,6 @@
-use crate::packets::Packet;
-use crate::registry::entities::objects::ObjectKind;
+use gami_macros::packet;
 
-use crate::serialization::{
-    deserialize_fixed_point_i32, deserialize_varint, serialize_fixed_point_i32, serialize_varint,
-};
-use gami_macros::{packet, Deserialize, Serialize};
+use crate::registry::entities::objects::ObjectKind;
 
 #[packet(0x0E, server)]
 pub struct SpawnObject {

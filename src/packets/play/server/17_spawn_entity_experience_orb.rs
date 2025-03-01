@@ -1,7 +1,4 @@
-use crate::packets::Packet;
-use crate::serialization::{deserialize_fixed_point, serialize_fixed_point};
-use crate::serialization::{deserialize_varint, serialize_varint};
-use gami_macros::{packet, Deserialize, Serialize};
+use gami_macros::packet;
 
 #[packet(0x11, server)]
 pub struct SpawnEntityExperienceOrb {

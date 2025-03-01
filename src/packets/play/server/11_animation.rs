@@ -1,7 +1,4 @@
-use gami_macros::{packet, Deserialize, Serialize};
-
-use crate::packets::Packet;
-use crate::serialization::{deserialize_varint, serialize_varint};
+use gami_macros::packet;
 
 #[packet(0x0B, server)]
 pub struct Animation {

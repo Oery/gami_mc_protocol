@@ -1,6 +1,5 @@
-use gami_macros::{packet, Deserialize, Serialize};
+use gami_macros::packet;
 
-use crate::packets::Packet;
 use crate::registry::{Difficulty, Dimension};
 
 #[packet(0x07, server)]

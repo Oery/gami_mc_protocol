@@ -1,5 +1,4 @@
-use crate::packets::Packet;
-use gami_macros::{packet, Deserialize, Serialize};
+use gami_macros::packet;
 
 #[packet(0x03, server)]
 pub struct UpdateTime {

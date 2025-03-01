@@ -1,7 +1,4 @@
-use crate::packets::Packet;
-use crate::serialization::{deserialize_fixed_point_i32, serialize_fixed_point_i32};
-use crate::serialization::{deserialize_varint, serialize_varint};
-use gami_macros::{packet, Deserialize, Serialize};
+use gami_macros::packet;
 
 #[packet(0x18, server)]
 pub struct EntityTeleport {

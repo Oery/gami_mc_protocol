@@ -1,7 +1,6 @@
-use crate::packets::Packet;
+use gami_macros::packet;
+
 use crate::registry::Vec3;
-use crate::serialization::{deserialize_varint, serialize_varint};
-use gami_macros::{packet, Deserialize, Serialize};
 
 #[packet(0x10, server)]
 pub struct SpawnEntityPainting {

@@ -1,6 +1,6 @@
-use crate::packets::Packet;
+use gami_macros::packet;
+
 use crate::registry::ChatModes;
-use gami_macros::{packet, Deserialize, Serialize};
 
 #[packet(0x15, client)]
 pub struct ClientSettings {

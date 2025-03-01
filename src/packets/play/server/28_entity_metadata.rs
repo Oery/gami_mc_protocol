@@ -1,10 +1,4 @@
-use crate::packets::Packet;
-use crate::serialization::{
-    deserialize_metadatas_vec, deserialize_varint, serialize_metadatas_vec, serialize_varint,
-    Metadata,
-};
-use gami_macros::{packet, Deserialize, Serialize};
-
+use gami_macros::packet;
 #[packet(0x1C, server)]
 pub struct EntityMetadata {
     #[encoding("varint")]
