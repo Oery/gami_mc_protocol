@@ -51,6 +51,14 @@ pub use animation::*;
 mod collect;
 pub use collect::*;
 
+#[path = "./server/14_spawn_object.rs"]
+mod spawn_object;
+pub use spawn_object::*;
+
+#[path = "./server/15_spawn_mob.rs"]
+mod spawn_mob;
+pub use spawn_mob::*;
+
 #[path = "./server/16_spawn_entity_painting.rs"]
 mod spawn_entity_painting;
 pub use spawn_entity_painting::*;
@@ -114,6 +122,10 @@ pub use remove_entity_effect::*;
 #[path = "./server/35_block_change.rs"]
 mod block_change;
 pub use block_change::*;
+
+#[path = "./server/56_player_info.rs"]
+mod player_info;
+pub use player_info::*;
 
 #[path = "./server/64_kick_disconnect.rs"]
 mod kick_disconnect;
