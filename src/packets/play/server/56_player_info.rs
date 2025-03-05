@@ -25,7 +25,7 @@ pub enum PlayerInfoAction {
 
 impl Deserialize for PlayerInfoAction {
     fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
-        let action = deserialize_varint(reader)?;
+        let action = deserialize_varint_i32(reader)?;
         match action {
             0 => Ok(PlayerInfoAction::AddPlayer(Vec::deserialize(reader)?)),
             1 => Ok(PlayerInfoAction::UpdateGameMode(Vec::deserialize(reader)?)),

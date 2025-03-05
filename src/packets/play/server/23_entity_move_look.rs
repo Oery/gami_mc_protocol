@@ -4,11 +4,11 @@ use gami_macros::packet;
 pub struct EntityMoveLook {
     #[encoding("varint")]
     pub entity_id: i32,
-    #[encoding("fixed_point_i8")]
+    #[encoding("fixed_point")]
     pub d_x: f32,
-    #[encoding("fixed_point_i8")]
+    #[encoding("fixed_point")]
     pub d_y: f32,
-    #[encoding("fixed_point_i8")]
+    #[encoding("fixed_point")]
     pub d_z: f32,
     pub yaw: i8,
     pub pitch: i8,

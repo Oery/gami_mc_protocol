@@ -27,7 +27,7 @@ impl Deserialize for InteractionType {
     fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
         use InteractionType::*;
 
-        let action = deserialize_varint(reader)?;
+        let action = deserialize_varint_i32(reader)?;
         match action {
             0 => Ok(Interact),
             1 => Ok(Attack),
@@ -49,10 +49,10 @@ impl Serialize for InteractionType {
         use InteractionType::*;
 
         match self {
-            Interact => serialize_varint(&0, buf),
-            Attack => serialize_varint(&1, buf),
+            Interact => serialize_varint_i32(&0, buf),
+            Attack => serialize_varint_i32(&1, buf),
             InteractAt { x, y, z } => {
-                serialize_varint(&2, buf)?;
+                serialize_varint_i32(&2, buf)?;
                 x.serialize(buf)?;
                 y.serialize(buf)?;
                 z.serialize(buf)?;

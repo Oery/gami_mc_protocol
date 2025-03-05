@@ -7,11 +7,11 @@ pub struct SpawnObject {
     #[encoding("varint")]
     pub entity_id: i32,
     pub kind: ObjectKind,
-    #[encoding("fixed_point_i32")]
+    #[encoding("fixed_point")]
     pub x: i32,
-    #[encoding("fixed_point_i32")]
+    #[encoding("fixed_point")]
     pub y: i32,
-    #[encoding("fixed_point_i32")]
+    #[encoding("fixed_point")]
     pub z: i32,
     pub yaw: u8,
     pub pitch: u8,

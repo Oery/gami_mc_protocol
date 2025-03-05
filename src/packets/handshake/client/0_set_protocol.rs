@@ -1,5 +1,3 @@
-use crate::registry::tcp::States;
-use crate::serialization::{deserialize_varint, serialize_varint};
 use gami_macros::packet;
 
 #[packet(0x00, client)]
