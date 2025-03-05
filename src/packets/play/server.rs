@@ -127,6 +127,22 @@ pub use block_change::*;
 mod player_info;
 pub use player_info::*;
 
+#[path = "./server/59_scoreboard_objective.rs"]
+mod scoreboard_objective;
+pub use scoreboard_objective::*;
+
+#[path = "./server/60_scoreboard_update.rs"]
+mod scoreboard_update;
+pub use scoreboard_update::*;
+
+#[path = "./server/61_scoreboard_display.rs"]
+mod scoreboard_display;
+pub use scoreboard_display::*;
+
+#[path = "./server/62_teams.rs"]
+mod teams;
+pub use teams::*;
+
 #[path = "./server/64_kick_disconnect.rs"]
 mod kick_disconnect;
 pub use kick_disconnect::*;
