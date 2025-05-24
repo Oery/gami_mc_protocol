@@ -3,7 +3,7 @@ use std::io::{self, Read};
 use byteorder::{BigEndian, ReadBytesExt};
 use uuid::Uuid;
 
-use super::deserialize_varint;
+use super::encoding::varint::deserialize_varint_i32;
 
 pub trait Deserialize {
     fn deserialize<R: Read>(reader: &mut R) -> io::Result<Self>
@@ -15,8 +15,14 @@ pub trait Deserialize {
 
 impl Deserialize for bool {
     fn deserialize<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let byte = reader.read_u8()?;
-        Ok(byte == 1)
+        match reader.read_u8()? {
+            0 => Ok(false),
+            1 => Ok(true),
+            val => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Invalid value for boolean, {val}"),
+            )),
+        }
     }
 }
 
@@ -82,7 +88,7 @@ impl Deserialize for f64 {
 
 impl Deserialize for String {
     fn deserialize<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let length = deserialize_varint(reader)?;
+        let length = deserialize_varint_i32(reader)?;
 
         let mut str_bytes = vec![0u8; length as usize];
         reader.read_exact(&mut str_bytes)?;
@@ -92,16 +98,16 @@ impl Deserialize for String {
     }
 }
 
-impl<T: Deserialize> Deserialize for Option<T> {
-    fn deserialize<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let value = T::deserialize(reader)?;
-        Ok(Some(value))
-    }
-}
+// impl<T: Deserialize> Deserialize for Option<T> {
+//     fn deserialize<R: Read>(reader: &mut R) -> io::Result<Self> {
+//         let value = T::deserialize(reader)?;
+//         Ok(Some(value))
+//     }
+// }
 
 impl<T: Deserialize> Deserialize for Vec<T> {
     fn deserialize<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let length = deserialize_varint(reader)?;
+        let length = deserialize_varint_i32(reader)?;
         let mut vec = Vec::with_capacity(length as usize);
         for _ in 0..length {
             vec.push(T::deserialize(reader)?);

@@ -2,13 +2,8 @@ use std::io::{self, Write};
 
 use byteorder::{ReadBytesExt, WriteBytesExt};
 
-use super::{Deserialize, Serialize};
-
-const SEGMENT_BITS: u8 = 0x7F;
-const CONTINUE_BIT: u8 = 0x80;
-
 // TODO: Check why we use this instead of cursor.write_varint() which is implemented in this file
-pub fn serialize_varint(value: &i32, writer: &mut dyn Write) -> io::Result<()> {
+pub fn serialize_varint_i32(value: &i32, writer: &mut dyn Write) -> io::Result<()> {
     let mut value = *value as u32;
     loop {
         let mut byte = (value & 0x7F) as u8;
@@ -24,7 +19,7 @@ pub fn serialize_varint(value: &i32, writer: &mut dyn Write) -> io::Result<()> {
     Ok(())
 }
 
-pub fn deserialize_varint<R: io::Read>(reader: &mut R) -> io::Result<i32> {
+pub fn deserialize_varint_i32<R: io::Read>(reader: &mut R) -> io::Result<i32> {
     let mut result = 0;
     let mut shift = 0;
     loop {
@@ -40,7 +35,7 @@ pub fn deserialize_varint<R: io::Read>(reader: &mut R) -> io::Result<i32> {
 
 pub trait VarIntReader {
     fn read_varint(&mut self) -> io::Result<i32>;
-    fn read_varint_full(&mut self) -> io::Result<(i32, Vec<u8>)>;
+    fn read_varint_len(&mut self) -> io::Result<(usize, usize)>;
 }
 
 impl<R: std::io::Read> VarIntReader for R {
@@ -67,21 +62,20 @@ impl<R: std::io::Read> VarIntReader for R {
         }
     }
 
-    fn read_varint_full(&mut self) -> io::Result<(i32, Vec<u8>)> {
+    fn read_varint_len(&mut self) -> io::Result<(usize, usize)> {
         let mut value: i32 = 0;
         let mut position = 0;
-        let mut buffer = [0u8; 1];
-        let mut bytes = Vec::new();
+        let mut length: usize = 0;
 
-        loop {
-            self.read_exact(&mut buffer)?;
-            let byte = buffer[0];
+        while let Ok(byte) = self.read_u8() {
+            length += 1;
 
             value |= ((byte & 0b0111_1111) as i32) << position;
-            bytes.push(byte);
+
             if byte & 0b1000_0000 == 0 {
-                return io::Result::Ok((value, bytes));
+                return Ok((value as usize, length));
             }
+
             position += 7;
             if position >= 32 {
                 return Err(io::Error::new(
@@ -90,32 +84,41 @@ impl<R: std::io::Read> VarIntReader for R {
                 ));
             }
         }
+
+        Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "VarInt is too big",
+        ))
     }
 }
 
-pub trait VarIntWriter {
-    fn write_varint(&mut self, value: i32) -> io::Result<()>;
-}
+pub fn decode_varint_length(buf: &[u8]) -> io::Result<(usize, usize)> {
+    let mut value: i32 = 0;
+    let mut shift = 0;
 
-impl<W: std::io::Write> VarIntWriter for W {
-    fn write_varint(&mut self, mut value: i32) -> io::Result<()> {
-        loop {
-            let mut temp = (value & SEGMENT_BITS as i32) as u8;
-            value >>= 7;
+    for (i, &byte) in buf.iter().enumerate() {
+        let seven_bits = (byte & 0x7F) as i32;
+        value |= seven_bits << shift;
 
-            if value != 0 {
-                temp |= CONTINUE_BIT;
-            }
-
-            self.write_all(&[temp])?;
-
-            if value == 0 {
-                break;
-            }
+        // MSB==0 means “this was the last byte”
+        if byte & 0x80 == 0 {
+            return Ok((value as usize, i + 1));
         }
 
-        Ok(())
+        shift += 7;
+        if shift >= 32 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "VarInt is too big (over 32 bits)",
+            ));
+        }
     }
+
+    // Buffer ended before we saw a byte with MSB=0
+    Err(io::Error::new(
+        io::ErrorKind::UnexpectedEof,
+        "Buffer too small for VarInt",
+    ))
 }
 
 pub trait ToVarInt {
@@ -125,45 +128,31 @@ pub trait ToVarInt {
 impl ToVarInt for i32 {
     fn to_varint(&self) -> io::Result<Vec<u8>> {
         let mut writer = std::io::Cursor::new(Vec::new());
-        serialize_varint(self, &mut writer)?;
+        serialize_varint_i32(self, &mut writer)?;
         Ok(writer.into_inner())
     }
 }
 
 pub fn deserialize_varint_vec<R: io::Read>(reader: &mut R) -> io::Result<Vec<i32>> {
-    let length = deserialize_varint(reader)?;
+    let length = deserialize_varint_i32(reader)?;
     let mut vec = Vec::with_capacity(length as usize);
     for _ in 0..length {
-        vec.push(deserialize_varint(reader)?);
+        vec.push(deserialize_varint_i32(reader)?);
     }
     Ok(vec)
 }
 
 pub fn serialize_varint_vec(vec: &Vec<i32>, writer: &mut dyn io::Write) -> io::Result<()> {
-    serialize_varint(&(vec.len() as i32), writer)?;
+    serialize_varint_i32(&(vec.len() as i32), writer)?;
     for item in vec {
-        serialize_varint(item, writer)?;
+        serialize_varint_i32(item, writer)?;
     }
     Ok(())
 }
 
 pub fn serialize_varint_option(option: &Option<i32>, writer: &mut dyn io::Write) -> io::Result<()> {
     if let Some(value) = option {
-        serialize_varint(value, writer)?;
+        serialize_varint_i32(value, writer)?;
     }
     Ok(())
-}
-
-pub struct VarInt<T>(T);
-
-impl Serialize for VarInt<i32> {
-    fn serialize(&self, buf: &mut dyn io::Write) -> io::Result<()> {
-        serialize_varint(&self.0, buf)
-    }
-}
-
-impl Deserialize for VarInt<i32> {
-    fn deserialize<R: io::Read>(reader: &mut R) -> io::Result<Self> {
-        Ok(VarInt(deserialize_varint(reader)?))
-    }
 }

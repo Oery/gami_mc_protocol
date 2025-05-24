@@ -101,7 +101,17 @@ fn generate_packet_enum(packets: &[PacketInfo]) -> anyhow::Result<()> {
         quote! { #variant(#ty) }
     });
 
-    let match_arms = packets.iter().map(|p| {
+    let match_serialize_arms = packets.iter().map(|p| {
+        let variant_name = match p.is_duplicate {
+            true => &format!("{}{}", p.origin.to_case(Case::Pascal), p.struct_name),
+            false => &p.struct_name,
+        };
+
+        let variant = Ident::new(variant_name, Span::call_site());
+        quote! { Packets::#variant(packet) => Packet::serialize(packet, compression), }
+    });
+
+    let match_arms_deserialize = packets.iter().map(|p| {
         let variant_name = match p.is_duplicate {
             true => &format!("{}{}", p.origin.to_case(Case::Pascal), p.struct_name),
             false => &p.struct_name,
@@ -121,11 +131,29 @@ fn generate_packet_enum(packets: &[PacketInfo]) -> anyhow::Result<()> {
         }
     });
 
+    let match_type_id_arms = packets.iter().map(|p| {
+        let ty =
+            parse_str::<Type>(&format!("{}::{}::{}", p.state, p.origin, p.struct_name)).unwrap();
+
+        let state = Ident::new(&p.state.to_case(Case::Pascal), Span::call_site());
+        let origin = Ident::new(&p.origin.to_case(Case::Pascal), Span::call_site());
+
+        let id = p.id;
+
+        quote! {
+            (#state, #origin, #id) => {
+                Ok(TypeId::of::<#ty>())
+            }
+        }
+    });
+
+    writeln!(file, "use std::any::TypeId;\n\n")?;
+
     let imports = quote! {
         use crate::packets::*;
-        use crate::registry::tcp::{Origins::*, States::*};
+        use crate::registry::tcp::{Origin::*, State::*};
     };
-    writeln!(file, "{}\n\n", imports)?;
+    writeln!(file, "{imports}\n\n")?;
 
     let enum_decl = quote! {
         #[derive(Debug)]
@@ -133,13 +161,26 @@ fn generate_packet_enum(packets: &[PacketInfo]) -> anyhow::Result<()> {
             #(#variants),*
         }
     };
-    writeln!(file, "{}\n\n", enum_decl)?;
+    writeln!(file, "{enum_decl}\n\n")?;
 
     let impl_decl = quote! {
         impl Packets {
-            pub fn deserialize(id: i32, state: &States, origin: &Origins, bytes: &[u8]) -> Result<Packets> {
+            pub fn serialize(&self, compression: i32) -> Result<Vec<u8>> {
+                match self {
+                    #(#match_serialize_arms)*
+                }
+            }
+
+            pub fn deserialize(id: i32, state: &State, origin: &Origin, bytes: &[u8]) -> Result<Packets> {
                 match (state, origin, id) {
-                    #(#match_arms)*
+                    #(#match_arms_deserialize)*
+                    _ => Err(Error::new(ErrorKind::InvalidData, "Unknown packet")),
+                }
+            }
+
+            pub fn get_type_id(id: i32, state: &State, origin: &Origin) -> Result<TypeId> {
+                match (state, origin, id) {
+                    #(#match_type_id_arms)*
                     _ => Err(Error::new(ErrorKind::InvalidData, "Unknown packet")),
                 }
             }

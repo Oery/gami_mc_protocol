@@ -1,21 +1,25 @@
+use std::any::Any;
 use std::fmt::Debug;
 use std::io::{Error, ErrorKind, Result};
 
 use crate::registry::tcp::{Origin, State};
+use crate::serialization::encoding::ToVarInt;
+use crate::serialization::{Deserialize, Serialize};
 
 pub mod handshake;
 pub mod login;
 pub mod play;
 pub mod status;
 
-mod packets_enum;
 pub use packets_enum::Packets;
 
-pub trait Packet: Serialize + Deserialize + Debug + Send + Sync {
-    fn serialize(&self, compression: i32) -> Result<Vec<u8>> {
+mod packets_enum;
+
+pub trait Packet: Serialize + Deserialize + Debug + Send + Sync + Any + Sized {
+    fn serialize(&self, compression_threshold: i32) -> Result<Vec<u8>> {
         let mut data = Vec::new();
 
-        if compression != -1 {
+        if compression_threshold != -1 {
             data.push(0x00); // TODO: Implement compression
         }
 

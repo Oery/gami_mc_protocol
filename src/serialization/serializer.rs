@@ -3,7 +3,7 @@ use std::io::{self, Write};
 use byteorder::{BigEndian, WriteBytesExt};
 use uuid::Uuid;
 
-use super::serialize_varint;
+use super::encoding::varint::serialize_varint_i32;
 
 pub trait Serialize {
     fn serialize(&self, buf: &mut dyn Write) -> io::Result<()>;
@@ -91,7 +91,7 @@ impl Serialize for f64 {
 impl Serialize for String {
     fn serialize(&self, buf: &mut dyn Write) -> io::Result<()> {
         let bytes = &self.as_bytes();
-        serialize_varint(&(bytes.len() as i32), buf)?;
+        serialize_varint_i32(&(bytes.len() as i32), buf)?;
         buf.write_all(bytes)?;
 
         Ok(())
@@ -109,7 +109,7 @@ impl<T: Serialize> Serialize for Option<T> {
 
 impl<T: Serialize> Serialize for Vec<T> {
     fn serialize(&self, buf: &mut dyn Write) -> io::Result<()> {
-        serialize_varint(&(self.len() as i32), buf)?;
+        serialize_varint_i32(&(self.len() as i32), buf)?;
         for item in self {
             item.serialize(buf)?;
         }

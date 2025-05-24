@@ -9,7 +9,11 @@ use syn::{
 };
 
 use entity::get_entity_traits_impl;
+use serialization::{get_struct_field_deserialization, get_struct_field_serialization};
+
 mod entity;
+mod packet;
+mod serialization;
 
 #[proc_macro]
 pub fn packets_enum(input: TokenStream) -> TokenStream {
@@ -96,13 +100,13 @@ impl Parse for PacketItem {
         if input.peek(syn::Token![as]) {
             let _: syn::Token![as] = input.parse()?;
             let alias: Ident = input.parse()?;
-            Ok(PacketItem { alias, struct_name })
-        } else {
-            Ok(PacketItem {
-                alias: struct_name.clone(),
-                struct_name,
-            })
+            return Ok(PacketItem { alias, struct_name });
         }
+
+        Ok(PacketItem {
+            alias: struct_name.clone(),
+            struct_name,
+        })
     }
 }
 
@@ -112,24 +116,6 @@ fn get_attribute<T: Parse>(attrs: &[Attribute], name: &str) -> Option<T> {
         .iter()
         .find(|attr| attr.path().is_ident(name))
         .and_then(|attr| attr.parse_args::<T>().ok())
-}
-
-fn is_vec_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            return segment.ident == "Vec";
-        }
-    }
-    false
-}
-
-fn is_option_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            return segment.ident == "Option";
-        }
-    }
-    false
 }
 
 fn parse_discriminant_as_typed_value(expr: &Expr, ty: &str) -> proc_macro2::TokenStream {
@@ -149,7 +135,10 @@ fn parse_discriminant_as_typed_value(expr: &Expr, ty: &str) -> proc_macro2::Toke
                 }) = &*unary_expr.expr
                 {
                     let value_str = lit_int.base10_digits().replace('_', "");
-                    value_str.parse::<i64>().expect("Failed to parse integer literal in negation") * -1
+                    value_str
+                        .parse::<i64>()
+                        .expect("Failed to parse integer literal in negation")
+                        * -1
                 } else {
                     panic!("Unsupported expression in negation");
                 }
@@ -183,47 +172,22 @@ pub fn derive_serialize(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     let expanded = match &input.data {
-        Data::Struct(data_struct) => {
-            // Existing struct handling code
-            let fields = match &data_struct.fields {
-                Fields::Named(fields_named) => &fields_named.named,
+        Data::Struct(data) => {
+            let fields = match &data.fields {
+                Fields::Named(fields) => &fields.named,
                 _ => panic!("Only named fields are supported for structs"),
             };
 
             let serializations = fields.iter().map(|field| {
-                let ident = &field.ident;
-                let ty = &field.ty;
-
-                let ser_expr =
-                    if let Some(encoding_method) = get_attribute::<LitStr>(&field.attrs, "encoding") {
-                        let mut string = format!("serialize_{}", encoding_method.value());
-
-                        if is_option_type(ty) {
-                            string.push_str("_option");
-                        } else if is_vec_type(ty) {
-                            string.push_str("_vec");
-                        }
-
-                        let serialize_fn = Ident::new(&string, Span::call_site().into());
-                        quote! { 
-                            #serialize_fn(&self.#ident, buf)?;
-                        }
-                    } else {
-                        quote! {
-                            Serialize::serialize(&self.#ident, buf)?;
-                        }
-                    };
+                let expr = get_struct_field_serialization(field);
 
                 match get_attribute::<Expr>(&field.attrs, "condition") {
-                    Some(condition) => quote! { 
+                    None => expr,
+                    Some(condition) => quote! {
                         if #condition {
-                            #ser_expr
-                        }
-                        else {
-                            eprintln!("[WARNING] Invalid packet {}, skipping field {} to avoid crashing. Condition {} was not met.", stringify!(#name), stringify!(self.#ident), stringify!(#condition));
+                            #expr
                         }
                     },
-                    None => ser_expr,
                 }
             });
 
@@ -239,7 +203,8 @@ pub fn derive_serialize(input: TokenStream) -> TokenStream {
 
         Data::Enum(data_enum) => {
             let encoding_type = get_attribute::<LitStr>(&input.attrs, "encoding")
-                .expect("Enums must specify encoding attribute, e.g. #[encoding(\"u8\")]").value();
+                .expect("Enums must specify encoding attribute, e.g. #[encoding(\"u8\")]")
+                .value();
 
             let repr_ident = syn::Ident::new(&encoding_type, Span::call_site());
             let variants = &data_enum.variants;
@@ -299,28 +264,19 @@ pub fn derive_deserialize(input: TokenStream) -> TokenStream {
 
             for field in &data_struct.fields {
                 let ident = &field.ident;
-                let ty = &field.ty;
 
-                let mut deser_code = match get_attribute::<LitStr>(&field.attrs, "encoding") {
-                    Some(encoding_method) => {
-                        let mut string = format!("deserialize_{}", encoding_method.value());
+                let mut deser_code = get_struct_field_deserialization(field);
 
-                        if is_vec_type(ty) {
-                            string.push_str("_vec");
-                        }
+                if let Some(attr) = get_attribute::<Expr>(&field.attrs, "condition") {
+                    // Remove spaces and self. from condition
+                    let string = attr
+                        .to_token_stream()
+                        .to_string()
+                        .replace(" ", "")
+                        .replace("self.", "");
+                    let tokens: TokenStream = string.parse().unwrap();
+                    let condition = syn::parse::<Expr>(tokens).unwrap();
 
-                        let deserialize_fn = Ident::new(&string, Span::call_site().into());
-                        quote! {#deserialize_fn(reader)?}
-                    },
-                    None => quote! {<#ty as Deserialize>::deserialize(reader)?},
-                };
-
-                if let Some(mut condition) = get_attribute::<Expr>(&field.attrs, "condition") {
-                    let mut condition_str = condition.to_token_stream().to_string().replace(" ", "");
-                    condition_str = condition_str.replace("self.", "");
-                    let tokens: TokenStream = condition_str.parse().unwrap();
-                    condition = syn::parse::<Expr>(tokens).unwrap();
-                    
                     deser_code = quote! {
                         match #condition {
                             true => #deser_code,
@@ -329,12 +285,8 @@ pub fn derive_deserialize(input: TokenStream) -> TokenStream {
                     }
                 };
 
-                let_statements.push(quote! {
-                    let #ident = #deser_code;
-                });
-                field_initializers.push(quote! {
-                    #ident,
-                });
+                let_statements.push(quote! { let #ident = #deser_code; });
+                field_initializers.push(quote! { #ident, });
             }
 
             quote! {
@@ -351,7 +303,8 @@ pub fn derive_deserialize(input: TokenStream) -> TokenStream {
 
         Data::Enum(data_enum) => {
             let encoding_type = get_attribute::<LitStr>(&input.attrs, "encoding")
-                .expect("Enums must specify encoding attribute, e.g. #[encoding(\"u8\")]").value();
+                .expect("Enums must specify encoding attribute, e.g. #[encoding(\"u8\")]")
+                .value();
 
             let repr_ident = syn::Ident::new(&encoding_type, Span::call_site());
 
@@ -374,7 +327,7 @@ pub fn derive_deserialize(input: TokenStream) -> TokenStream {
                 let value = parse_discriminant_as_typed_value(expr, &encoding_type);
                 let variant_ident = &variant.ident;
 
-                quote! { 
+                quote! {
                     #value => Ok(#name::#variant_ident),
                 }
             });
@@ -410,17 +363,13 @@ struct PacketAttr {
     direction: PacketDirection,
 }
 
-// Custom parser for the attribute
 impl Parse for PacketAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        // Parse the ID
         let id_lit = input.parse::<LitInt>()?;
         let id = id_lit.base10_parse::<u8>()?;
 
-        // Expect a comma
         input.parse::<Token![,]>()?;
 
-        // Parse the direction identifier
         let direction_ident = input.parse::<syn::Ident>()?;
         let direction = match direction_ident.to_string().as_str() {
             "client" => PacketDirection::Client,
@@ -443,43 +392,38 @@ pub fn packet(attr: TokenStream, item: TokenStream) -> TokenStream {
     let item = parse_macro_input!(item as DeriveInput);
     let name = &item.ident;
 
-    // Generate different implementations based on direction
     let direction_impl = match direction {
-        PacketDirection::Client => quote! {
-            impl ClientPacket for #name {}
-        },
-        PacketDirection::Server => quote! {
-            impl ServerPacket for #name {}
-        },
+        PacketDirection::Client => quote! { impl ClientPacket for #name {} },
+        PacketDirection::Server => quote! { impl ServerPacket for #name {} },
     };
 
     let origin = match direction {
-        PacketDirection::Client => quote! {
-            crate::registry::tcp::Origins::Client
-        },
-        PacketDirection::Server => quote! {
-            crate::registry::tcp::Origins::Server
-        },
+        PacketDirection::Client => quote! { Origin::Client },
+        PacketDirection::Server => quote! { Origin::Server },
     };
 
     let expanded = quote! {
-        use crate::serialization::{Deserialize, Serialize};
-        use crate::packets::{ClientPacket, ServerPacket};
+        use gami_macros::{Serialize, Deserialize};
+
+        use crate::serialization::*;
+        use crate::serialization::encoding::*;
+        use crate::packets::{Packet, ClientPacket, ServerPacket};
+        use crate::registry::tcp::{Origin, State};
 
         #[derive(PartialEq, Debug, Deserialize, Serialize)]
         #item
 
         impl Packet for #name {
-            fn get_origin(&self) -> crate::registry::tcp::Origins {
+            fn get_id(&self) -> u8 {
+                #id
+            }
+
+            fn get_origin(&self) -> Origin {
                 #origin
             }
 
-            fn get_state(&self) -> crate::registry::tcp::States {
-                crate::registry::tcp::States::from_module_path(module_path!())
-            }
-
-            fn get_id(&self) -> u8 {
-                #id
+            fn get_state(&self) -> State {
+                State::from_module_path(module_path!())
             }
 
             fn get_name(&self) -> &'static str {
