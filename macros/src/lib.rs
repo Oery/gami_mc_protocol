@@ -8,6 +8,9 @@ use syn::{
     LitInt, LitStr, Path, Token, UnOp,
 };
 
+use entity::get_entity_traits_impl;
+mod entity;
+
 #[proc_macro]
 pub fn packets_enum(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as PacketGroups);
@@ -488,4 +491,110 @@ pub fn packet(attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     expanded.into()
+}
+
+#[proc_macro_attribute]
+pub fn entity(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let mut traits = Vec::new();
+    let trait_parser = syn::meta::parser(|meta| {
+        traits.push(meta.path);
+        Ok(())
+    });
+    parse_macro_input!(attr with trait_parser);
+
+    let item = parse_macro_input!(item as DeriveInput);
+    let name = &item.ident;
+
+    let trait_impls = get_entity_traits_impl(&traits, name);
+    let update_calls = traits.iter().map(|trait_name| {
+        quote! {
+            #trait_name::update(self, metadatas);
+        }
+    });
+
+    let expanded = quote! {
+        use crate::registry::entities::Entity;
+        use crate::serialization::Metadata;
+
+        #[derive(Debug, Default, PartialEq)]
+        #item
+
+        impl Entity for #name {
+            fn update(&mut self, metadatas: &[Metadata]) {
+                #(#update_calls)*
+
+                #name::update(self, metadatas);
+
+                for metadata in metadatas {
+                    match metadata {
+                        Metadata::Byte(0, value) => self.flags = *value,
+                        Metadata::Short(1, value) => self.air = *value,
+                        Metadata::String(2, value) => self.name_tag = value.clone(),
+                        Metadata::Byte(3, value) => self.always_show_name_tag = *value != 0,
+                        Metadata::Byte(4, value) => self.is_silent = *value != 0,
+                        _ => (),
+                    }
+                }
+            }
+
+            fn id(&self) -> i32 {
+                self.id
+            }
+
+            fn is_on_fire(&self) -> bool {
+                (self.flags & 0x01) != 0
+            }
+
+            fn is_crouching(&self) -> bool {
+                (self.flags & 0x02) != 0
+            }
+
+            fn is_sprinting(&self) -> bool {
+                (self.flags & 0x08) != 0
+            }
+
+            fn is_eating_drinking_blocking(&self) -> bool {
+                (self.flags & 0x10) != 0
+            }
+
+            fn is_invisible(&self) -> bool {
+                (self.flags & 0x20) != 0
+            }
+
+            fn air(&self) -> i16 {
+                self.air
+            }
+
+            fn name_tag(&self) -> &str {
+                &self.name_tag
+            }
+
+            fn always_show_name_tag(&self) -> bool {
+                self.always_show_name_tag
+            }
+
+            fn is_silent(&self) -> bool {
+                self.is_silent
+            }
+        }
+
+        #(#trait_impls)*
+    };
+
+    expanded.into()
+}
+
+#[proc_macro_derive(LivingEntity)]
+pub fn living_entity(item: TokenStream) -> TokenStream {
+    entity::get_living(item)
+}
+
+#[proc_macro_derive(Ageable)]
+pub fn ageable(item: TokenStream) -> TokenStream {
+    entity::get_ageable(item)
+}
+
+#[proc_macro_derive(Tameable)]
+pub fn tameable(item: TokenStream) -> TokenStream {
+    entity::get_tameable(item)
 }

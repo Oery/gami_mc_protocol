@@ -1,8 +1,9 @@
 use std::io::{self, Read, Write};
 
-use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{BigEndian, ReadBytesExt};
 
 use super::{Deserialize, Serialize};
+use crate::packets::play::server::Item;
 
 #[derive(Debug, PartialEq)]
 pub enum Metadata {
@@ -11,7 +12,7 @@ pub enum Metadata {
     Int(u8, i32),
     Float(u8, f32),
     String(u8, String),
-    Slot(u8),
+    Slot(u8, Item),
     Xyz(u8, i32, i32, i32),
     Pyr(u8, f32, f32, f32),
     End,
@@ -55,11 +56,8 @@ impl Deserialize for Metadata {
             }
 
             5 => {
-                // TODO: Implement slot
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "Slot metadata not implemented",
-                ));
+                let slot = Item::deserialize(reader)?;
+                Metadata::Slot(index, slot)
             }
 
             6 => {
@@ -84,27 +82,26 @@ impl Deserialize for Metadata {
 }
 
 impl Serialize for Metadata {
-    fn serialize(&self, buf: &mut dyn Write) -> io::Result<()> {
+    fn serialize(&self, _buf: &mut dyn Write) -> io::Result<()> {
         // TODO: Implement serialize
         todo!("Serialize metadata");
-
-        Ok(())
     }
 }
 
-pub fn deserialize_metadatas_vec<R: Read>(reader: &mut R) -> io::Result<Vec<Metadata>> {
+pub fn deserialize_metadatas<R: Read>(reader: &mut R) -> io::Result<Vec<Metadata>> {
     let mut vec = Vec::with_capacity(10);
+
     loop {
-        let metadata = Metadata::deserialize(reader)?;
-        if metadata == Metadata::End {
-            break;
+        match Metadata::deserialize(reader)? {
+            Metadata::End => break,
+            metadata => vec.push(metadata),
         }
-        vec.push(metadata);
     }
+
     Ok(vec)
 }
 
-pub fn serialize_metadatas_vec(metadatas: &[Metadata], writer: &mut dyn Write) -> io::Result<()> {
+pub fn serialize_metadatas(metadatas: &[Metadata], writer: &mut dyn Write) -> io::Result<()> {
     for metadata in metadatas {
         metadata.serialize(writer)?;
     }
