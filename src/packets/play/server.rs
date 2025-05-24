@@ -19,6 +19,10 @@ pub use chat::*;
 mod update_time;
 pub use update_time::*;
 
+#[path = "./server/4_entity_equipment.rs"]
+mod entity_equipment;
+pub use entity_equipment::*;
+
 #[path = "./server/5_spawn_position.rs"]
 mod spawn_position;
 pub use spawn_position::*;
@@ -46,6 +50,10 @@ pub use bed::*;
 #[path = "./server/11_animation.rs"]
 mod animation;
 pub use animation::*;
+
+#[path = "./server/12_spawn_player.rs"]
+mod spawn_player;
+pub use spawn_player::*;
 
 #[path = "./server/13_collect.rs"]
 mod collect;
@@ -122,6 +130,10 @@ pub use remove_entity_effect::*;
 #[path = "./server/35_block_change.rs"]
 mod block_change;
 pub use block_change::*;
+
+#[path = "./server/47_set_slot.rs"]
+mod set_slot;
+pub use set_slot::*;
 
 #[path = "./server/56_player_info.rs"]
 mod player_info;
