@@ -2,8 +2,8 @@ mod deserializer;
 mod fixed_point;
 mod json;
 mod metadata;
+pub mod nbt;
 mod serializer;
-mod varint;
 
 pub use deserializer::Deserialize;
 pub use fixed_point::*;
