@@ -1,7 +1,8 @@
 use crate::serialization::{Deserialize, Serialize};
+use derive_more::Display;
 use gami_macros::{Deserialize, Serialize};
 
-#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone, Display)]
 #[encoding("u8")]
 pub enum PotionEffect {
     Speed = 1,
