@@ -1,13 +1,13 @@
-use std::fmt::{Debug, Display};
 use std::io::{Error, ErrorKind, Read, Result, Write};
 
 use atomic_enum::atomic_enum;
+use derive_more::Display;
 
 use crate::serialization::encoding::varint::{deserialize_varint_i32, serialize_varint_i32};
 use crate::serialization::{Deserialize, Serialize};
 
-#[derive(Eq, PartialEq, Debug, Clone, Copy)]
-
+/// Role of the sender
+#[derive(Eq, PartialEq, Debug, Clone, Copy, Display)]
 pub enum Origin {
     Client,
     Server,
@@ -22,7 +22,7 @@ impl Display for Origins {
     }
 }
 #[atomic_enum]
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Display)]
 pub enum State {
     Handshake,
     Status,
