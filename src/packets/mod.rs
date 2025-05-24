@@ -1,8 +1,7 @@
 use std::fmt::Debug;
 use std::io::{Error, ErrorKind, Result};
 
-use crate::registry::tcp::{Origins, States};
-use crate::serialization::{Deserialize, Serialize, ToVarInt};
+use crate::registry::tcp::{Origin, State};
 
 pub mod handshake;
 pub mod login;
@@ -37,9 +36,9 @@ pub trait Packet: Serialize + Deserialize + Debug + Send + Sync {
         Deserialize::deserialize(&mut reader)
     }
 
-    fn get_origin(&self) -> Origins;
+    fn get_origin(&self) -> Origin;
     fn get_name(&self) -> &'static str;
-    fn get_state(&self) -> States;
+    fn get_state(&self) -> State;
     fn get_id(&self) -> u8;
 }
 

@@ -4,7 +4,7 @@
 // #################################################
 
 use crate::packets::*;
-use crate::registry::tcp::{Origins::*, States::*};
+use crate::registry::tcp::{Origin::*, State::*};
 
 #[derive(Debug)]
 pub enum Packets {

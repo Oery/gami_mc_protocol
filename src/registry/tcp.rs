@@ -7,7 +7,7 @@ use crate::serialization::{deserialize_varint, serialize_varint, Deserialize, Se
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy)]
 
-pub enum Origins {
+pub enum Origin {
     Client,
     Server,
 }
@@ -22,55 +22,43 @@ impl Display for Origins {
 }
 #[atomic_enum]
 #[derive(Eq, PartialEq)]
-pub enum States {
+pub enum State {
     Handshake,
     Status,
     Login,
     Play,
 }
 
-impl States {
-    pub fn from_module_path(module: &str) -> States {
+impl State {
+    pub fn from_module_path(module: &str) -> State {
         match module {
-            _ if module.contains("handshake") => States::Handshake,
-            _ if module.contains("status") => States::Status,
-            _ if module.contains("login") => States::Login,
-            _ if module.contains("play") => States::Play,
+            _ if module.contains("handshake") => State::Handshake,
+            _ if module.contains("status") => State::Status,
+            _ if module.contains("login") => State::Login,
+            _ if module.contains("play") => State::Play,
             _ => panic!("A Packet must be defined in either a state module"),
         }
     }
 }
 
-// TODO: Check if there is an easier way to do this
-impl Display for States {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            States::Handshake => write!(f, "Handshake"),
-            States::Status => write!(f, "Status"),
-            States::Login => write!(f, "Login"),
-            States::Play => write!(f, "Play"),
-        }
-    }
-}
-
-impl Serialize for States {
+impl Serialize for State {
     fn serialize(&self, buf: &mut dyn Write) -> Result<()> {
         match self {
-            States::Handshake => serialize_varint(&0, buf),
-            States::Status => serialize_varint(&1, buf),
-            States::Login => serialize_varint(&2, buf),
-            States::Play => serialize_varint(&3, buf),
+            State::Handshake => serialize_varint_i32(&0, buf),
+            State::Status => serialize_varint_i32(&1, buf),
+            State::Login => serialize_varint_i32(&2, buf),
+            State::Play => serialize_varint_i32(&3, buf),
         }
     }
 }
 
-impl Deserialize for States {
+impl Deserialize for State {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self> {
-        match deserialize_varint(reader)? {
-            0 => Ok(States::Handshake),
-            1 => Ok(States::Status),
-            2 => Ok(States::Login),
-            3 => Ok(States::Play),
+        match deserialize_varint_i32(reader)? {
+            0 => Ok(State::Handshake),
+            1 => Ok(State::Status),
+            2 => Ok(State::Login),
+            3 => Ok(State::Play),
             _ => Err(Error::new(ErrorKind::InvalidData, "Invalid state")),
         }
     }

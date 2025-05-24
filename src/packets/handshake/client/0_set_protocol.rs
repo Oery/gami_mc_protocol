@@ -6,5 +6,5 @@ pub struct SetProtocol {
     pub protocol_version: i32,
     pub server_host: String,
     pub server_port: u16,
-    pub next_state: States,
+    pub next_state: State,
 }
