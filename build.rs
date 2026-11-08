@@ -96,8 +96,13 @@ fn generate_packet_enum(packets: &[PacketInfo]) -> anyhow::Result<()> {
         };
 
         let variant = Ident::new(variant_name, Span::call_site());
-        let ty =
-            parse_str::<Type>(&format!("{}::{}::{}", p.state, p.origin, p.struct_name)).unwrap();
+        let ty = {
+            let s = format!("{}::{}::{}", p.state, p.origin, p.struct_name);
+            match syn::parse_str::<Type>(&s) {
+                Ok(t) => t,
+                Err(e) => panic!("failed to parse type `{s}`: {e}"),
+            }
+        };
         quote! { #variant(#ty) }
     });
 
@@ -224,7 +229,8 @@ fn list_packets() -> anyhow::Result<Vec<PacketInfo>> {
             };
 
             let path = entry.path().strip_prefix("src/packets")?;
-            let (state, origin) = parse_path_components(path.to_str().unwrap());
+            let path_str = path.to_str().unwrap().replace('\\', "/");
+            let (state, origin) = parse_path_components(&path_str);
             let (id, _origin) = parse_packet_attr(packet_attr);
 
             packets.push(PacketInfo {
