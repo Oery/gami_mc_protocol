@@ -38,7 +38,7 @@ impl Deserialize for Option<ItemProperties> {
 }
 
 impl Serialize for Option<ItemProperties> {
-    fn serialize(&self, buf: &mut dyn io::Write) -> io::Result<()> {
+    fn serialize(&self, _buf: &mut dyn io::Write) -> io::Result<()> {
         unimplemented!()
     }
 }

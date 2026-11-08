@@ -3,6 +3,9 @@ use std::io::{Error, ErrorKind, Read};
 use crate::serialization::nbt::{NbtTagType, NBT};
 use crate::serialization::Deserialize;
 
+// Kept for the planned NBT-decryption/validation work (see the commented-out
+// `NBT for Enchantment` impl in types/item.rs that calls this).
+#[allow(dead_code)]
 pub fn validate_field<R: Read>(reader: &mut R, name: &[u8], tag: NbtTagType) -> Result<(), Error> {
     // Validate NBT Tag Type
     let result = NbtTagType::deserialize_nbt(reader)?;

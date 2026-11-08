@@ -4,8 +4,6 @@ pub mod types;
 mod validation;
 
 pub use deserializer::*;
-pub use serializer::*;
-pub(crate) use validation::*;
 
 pub struct ByteArray(pub Vec<i8>);
 
